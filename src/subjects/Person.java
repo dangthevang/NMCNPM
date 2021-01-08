@@ -16,6 +16,10 @@ public class Person {
         this.conn = connect.ConnectSQL();
     }
 
+    public Person() {
+        this.conn = connect.ConnectSQL();
+    }
+
     public String getId_name() {
         return id_name;
     }

@@ -1,16 +1,20 @@
 package subjects;
 import connect_database.JavaConnectSQL;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.PreparedStatement;
-import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Admin extends Person{
     public Admin(String id_name, String password) {
-        super(id_name, password);
         }
+
+    public Admin() {
+        super();
+    }
+
     public Boolean check_username(String user) {
         var sql ="select name from user_password";
         boolean check = true;
@@ -52,32 +56,39 @@ public class Admin extends Person{
 
         }return "";
     }
+    public Integer getMoney(String user) {
+        String sql = "Select money from profile where name ='"+user+"'";
+        try {
+            Statement stmt = this.getConn().createStatement();
+            var rs = stmt.executeQuery(sql);
+            while (rs.next()){
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
     public Float caculate(Integer money){
         return (float) money/10000;
     }
 
     public void createClint(String user, String password) {
-        while (!this.check_username(user)){
-            System.out.print("Tai khoan da ton tai. Xin moi nhap lai: ");
-            Scanner myObj = new Scanner(System.in);
-            user = myObj.nextLine();
-        }
-
         try{
             var sql ="INSERT INTO profile VALUES (?,?,?,?,?); ";
             PreparedStatement stmt = this.getConn().prepareStatement(sql);
             stmt.setString(1, user);
             stmt.setInt(2, 0);
-            stmt.setInt(3, 0);
-            stmt.setString(4, "");
-            stmt.setFloat(5, 0);
+            stmt.setString(3, "");
+            stmt.setFloat(4, 0);
+            stmt.setString(5, "0");
             stmt.execute();
 
             sql ="INSERT INTO user_password VALUES (?,?,?); ";
             stmt = this.getConn().prepareStatement(sql);
             stmt.setString(1, user);
             stmt.setString(2, password);
-            stmt.setString(3, "0");
+            stmt.setString(3, "");
             stmt.execute();
         } catch (SQLException e){
         e.printStackTrace();
@@ -88,6 +99,10 @@ public class Admin extends Person{
         try {
             String sql = "delete from user_password where name=?";
             PreparedStatement stmt = this.getConn().prepareStatement(sql);
+            stmt.setString(1,user);
+            stmt.executeUpdate();
+            sql = "delete from history where name=?";
+            stmt = this.getConn().prepareStatement(sql);
             stmt.setString(1,user);
             stmt.executeUpdate();
             sql = "delete from profile where name=?";
@@ -126,26 +141,33 @@ public class Admin extends Person{
             throwables.printStackTrace();
         }
     }
-    public String[][] getDataUser(){
-        String[][] data = new String[100][5];
+    public List<Clint> getDataUser(){
+        List<Clint> clints = new ArrayList<Clint>();
         var sql ="select * from profile";
-        int row = 0;
         try{
+            Clint clint = new Clint();
+            clints.add(clint);
+            clint.setId_name("Admin");
             Statement stmt = this.getConn().createStatement();
             var rs = stmt.executeQuery(sql);
             while (rs.next()){
-                    for(int col = 1; col <=5; col++){
-                       data[row][col-1] = rs.getString(col);
-                    };
-                    row++;
-                }
+                clint = new Clint();
+                clint.setId_name(rs.getString("name"));
+                clint.setMoney(rs.getInt("money"));
+                clint.setActive(rs.getString("active_user"));
+                clint.setTime_use(rs.getFloat("time_use"));
+                clint.setMessage(rs.getNString("message"));
+                clints.add(clint);
+            }
+
         } catch (SQLException e){
             e.printStackTrace();
         }
-        return data;
+        return clints;
     };
     public static void main(String [] args){
-        Admin ad = new Admin("Vang","12345");
-        System.out.print(ad.check_username("ahahhaha"));
+        Admin ad = new Admin();
+        System.out.print(ad.getDataUser());
+        System.out.print("Done");
     }
 }
